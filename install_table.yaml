@@ -63,7 +63,7 @@
 - hosts: db
   become: yes
   vars_files:
-    - "/root/main.yml"
+    - "main.yml"
   
   tasks:
   - name: Ajout du dépots epel-release
