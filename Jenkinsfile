@@ -2,7 +2,7 @@ def pipelineContext = [:]
 node {
 
    def registryProjet='ilyress/'
-   def IMAGE="${registryProjet}apache:version-${env.BUILD_ID}"
+   def IMAGE="${registryProjet}php:version-${env.BUILD_ID}"
 
     stage('Clone') {
           checkout scm
