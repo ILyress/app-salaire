@@ -1,28 +1,15 @@
-def pipelineContext = [:]
-node {
-
-   def registryProjet='ilyress/'
-   def IMAGE="${registryProjet}php:version-${env.BUILD_ID}"
-
-    stage('Clone') {
-          checkout scm
-    }
-
-    def img = stage('Build') {
-          docker.build("$IMAGE",  '.')
-    }
-
-    stage('Run') {
-          img.withRun("--name run-$BUILD_ID -p 8000:80") { c ->
-       
-          }
-    }
-
-    stage('Push') {
-          docker.withRegistry('https://registry.hub.docker.com', 'registry_id') {
-              img.push 'latest'
-              img.push()
-          }
-    }
-
+node{
+ stage('Clone') {
+   git 'https://github.com/ILyress/app-salaire.git'
+ }
+ stage('Ansible') {
+    ansiblePlaybook (
+    colorized: true, 
+    become: true, 
+    playbook: 'install_table.yaml',
+    inventory: 'inventaire.yaml',
+    credentialsId: 'bd685dc9-3d1e-47b1-dfe5-49831f23062',
+    disableHostKeyChecking: true
+    )
+  }
 }
