@@ -1,5 +1,0 @@
-pkg:
-  - vim
-  - php
-  - php-mysql
-  - httpd
