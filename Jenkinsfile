@@ -6,8 +6,8 @@ node{
     ansiblePlaybook (
     colorized: true, 
     become: true, 
-    playbook: 'install_table',
-    inventory: 'inventaire.yaml',
+    playbook: 'install_table.yaml',
+    inventory: 'inventaire',
     disableHostKeyChecking: true
     )
   }
