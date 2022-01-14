@@ -1,0 +1,117 @@
+---
+
+- hosts: webservers
+
+
+  vars_files:
+    - vars/main.yaml
+
+  become: yes
+
+  tasks:
+  - name: install apache et php
+    yum:
+      name: "{{ item }}"
+      state: present
+    loop:
+      "{{ pkg }}"
+  - name: démarrage et activation du service apache2
+    systemd:
+        name: httpd
+        enabled: yes
+        state: started
+  - name: arret du firewall
+    systemd:
+        name: firewalld
+        enabled: no
+        state: stopped
+  - name: Copie du fichier index.php dans /var/www/html
+    copy:
+     src: files/index.php
+     dest: /var/www/html/
+
+  - name: supp du fichier index.html
+    file:
+     path: /var/www/html/index.html
+     state: absent
+
+  - name: Modification du port 80 vers 8080 du serveur apache
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^Listen '
+      insertafter: '^#Listen '
+      line: 'Listen 8080'
+
+  - name: copier le rep app dans /var/www/html/
+    copy:
+     src: app/
+     dest: /var/www/html/
+
+  - name: ajout du fichier de php de la configuraion d'acces a la db
+    template:
+      src: "db-config.php.j2"
+      dest: /var/www/html/db-config.php
+    notify:
+     - restart_apache
+  handlers:
+    - name: restart_apache
+      systemd:
+        name: httpd
+        state: restarted
+
+## SERVEUR DE BASE DE DONNEES
+- hosts: db
+  become: yes
+  vars_files:
+    - "/root/main.yml"
+  
+  tasks:
+  - name: Ajout du dépots epel-release
+    yum:
+     name: epel-release
+     state: present
+
+  - name: Installation de Mariadb et python2-PyMySQL
+    yum:
+     name:
+      - mariadb-server
+      - python2-PyMySQL
+     state: present
+  
+  - name: Start and activation du serveur Mariadb
+    systemd:
+      name: mariadb
+      state: started
+      enabled: yes
+      
+  - name: Création du fichier client mariadb
+    copy: 
+      dest: /root/my.cnf
+      content: | 
+        [client]
+        user=root 
+        password=""
+
+  - name: Upload sql table config
+    template:
+      src: "/root/templates/table.sql.j2"
+      dest: /tmp/table.sql
+
+  - name: Insert table dans mariadb
+    mysql_db:
+     name: "{{ mysql_dbname }}"
+     state: present
+     login_user: root
+     login_password: ""
+     state: import
+     target: /tmp/table.sql
+     
+  - name: "Create {{ mysql_user }} avec les privileges sur la db {{ mysql_dbname }}"
+    mysql_user:
+      login_user: root
+      login_password: ""
+      name: "{{ mysql_user }}"
+      password: "{{ mysql_password }}"
+      priv: "{{ mysql_dbname }}.*:ALL"
+      host: "{{ webserver_host }}"
+      state: present
