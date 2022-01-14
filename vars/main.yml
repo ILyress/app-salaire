@@ -1,0 +1,8 @@
+---
+
+root_mariadb_password: "root"
+mysql_user: "valentinm"
+mysql_password: ""
+mysql_dbname: "dbval"
+db_host: "192.168.98.136"
+webserver_host: "192.168.98.137"
